@@ -13,28 +13,28 @@ WIN_NAME = "display"
 
 #filter techniques discovered from
 #http://stackoverflow.com/questions/12093594/how-to-implement-band-pass-butterworth-filter-with-scipy-signal-butter
+import matplotlib.pyplot as plt
 from scipy.signal import butter,lfilter,freqz
 def butter_bandpass(lowcut, highcut, fs, order=5):
-  #nyq = 0.5 * fs
-  #low = (fs/lowcut) / nyq
-  #high = (fs/highcut) / nyq
-  (high,low) = (1/(2*lowcut),1/(2*highcut))
-  print("sampling freq is %.2f so using frequencies from %.2f to %.2f" % (fs,low,high))
+  nyq = 0.5 * fs
+  low = lowcut / nyq
+  high = highcut / nyq
   b, a = butter(order, [low, high], btype='band')
   return b, a
 
 
 def butter_bandpass_filter(data, myfilter):
   (b,a) = myfilter
-  return lfilter(b, a, data)
+  y = lfilter(b, a, data)
+  return y
 
 def myProgram(robot):
   global count,start
   robot.camera.image_stream_enabled = True
 
   #vars for filter
-  lowfreq = 40 #low heartrate
-  highfreq = 250 #high heartrate
+  lowfreq = 1 #low heartrate in hz
+  highfreq = 4 #high heartrate in hz
 
   #vars for sample frequency
   count = 0
@@ -72,13 +72,23 @@ def myProgram(robot):
         else: #process and restart
           #create filter
           bpfilter = butter_bandpass(lowfreq,highfreq,curFreq,order=9)
+          #display filter on side cause why not
+          (w,h) = freqz(bpfilter[0],bpfilter[1],worN=8000)
+          plt.plot(0.5*curFreq*w/np.pi,np.abs(h),'b')
+          plt.plot(highfreq,0.5*np.sqrt(2),'ko')
+          plt.axvline(highfreq,color='k')
+          plt.axvline(lowfreq,color='k')
+          plt.xlim(0,0.5*curFreq)
+          plt.title("Filter Frequency Response")
+          plt.xlabel("Frequency (Hz)")
+          plt.grid()
 
           #filter every pixel
           for i in range(dims[0]):
             for j in range(dims[1]):
               signal = imageSeq[i,j,:]
               filtered=butter_bandpass_filter(signal,bpfilter)
-              result[i,j] = filtered.max(axis=0)
+              result[i,j] = np.mean(filtered,axis=0)
 
           #show result
           cv2.imshow("result",result)
