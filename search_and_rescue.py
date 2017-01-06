@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-
-SHOW_TAGS = False
+#"search_and_rescue.py": Say a tag ID and cozmo will find & move to that tag
 
 import speech_recognition as sr #requires internet & pyaudio
 import numpy as np
 import cv2,cozmo,time,sys
-print("imports complete")
 
 def cozmo_control(robot,tagID,adict,params,dims,p=0.5):
   curbox = None
@@ -54,6 +52,8 @@ def cozmo_control(robot,tagID,adict,params,dims,p=0.5):
         maxdist = curdist
   print("cursize is "+str(maxdist))
   return maxdist
+
+
 
 def lookaround(robot):
   #setup cozmo's view and arms
@@ -155,16 +155,8 @@ def lookaround(robot):
         #    curblock = curblock + 2*(curblock-curavg)
         #    curim[j*width:min((j+1)*width,dim[0]),k*height:min((k+1)*height,dim[1]),:] = curblock
         #curim = cv2.bilateralFilter(curim,10,50,2000)
-
-        curim = curim.astype(np.uint8)
-        curim[curim<0]=0
-        curim[curim>255]=255
-
-        #stddev = np.std(curim)
-        #curim = (255*(curim/255)**2).astype(np.uint8)
-        #minim = np.amin(curim)
-        #print("min is",minim)
-        #curim = np.add(curim,-minim)
+        #curim = curim.astype(np.uint8)
+        #curim[curim<0]=0
         #curim[curim>255]=255
         
         gray = cv2.cvtColor(curim,cv2.COLOR_BGR2GRAY)
@@ -210,102 +202,6 @@ def lookaround(robot):
     else:
       robot.say_text("command not recognized. Try again").wait_for_completed()
 
-def obey(robot):
-  global SHOW_TAGS
-  #init camera
-  print("initializing camera...")
-  robot.camera.image_stream_enabled = True
-  curim = robot.world.latest_image
-  while(curim is None):
-    time.sleep(1) #wait and try again
-    curim = robot.world.latest_image
-
-  #init speech
-  print("initializing speech...")
-  r = sr.Recognizer()
-
-  #init aruco
-  print("initializing aruco tags...")
-  adict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
-  params = cv2.aruco.DetectorParameters_create()
-
-  if(SHOW_TAGS):
-    tag1 = cv2.aruco.drawMarker(adict,1,300)
-    tag2 = cv2.aruco.drawMarker(adict,2,300)
-    cv2.imshow("tag1",tag1)
-    cv2.waitKey(1)
-    cv2.imshow("tag2",tag2)
-    cv2.waitKey(1000)
-
-  #program start
-  print("Ready!")
-  commands = {
-  "zero":0,"0":0,
-  "one":1,"won":1,"1":1,
-  "two":2,"too":2,"to":2,"2":2,
-  "three":3,"3":3,
-  "four":4,"for":4,"4":4,
-  "five":5,"5":5,
-  "six":6,"6":6,
-  "seven":7,"7":7,
-  "eight":8,"ate":8,"8":8,
-  "nine":9,"9":9}
-  
-  while(True):
-    #listen for orders
-    command = None
-    with sr.Microphone() as source:
-      print("Say something!")
-      audio = r.listen(source)
-    print("processing...")
-    try:
-      command = r.recognize_google(audio)
-      print("you said "+command)
-      if(command.lower in ["exit","finish","quit","stop","over"]):
-        sys.exit()
-    except sr.UnknownValueError:
-      print("Google speech recognition could not understand")
-    except sr.RequestError as e:
-      print("Could not request results from google speech recognition service; {0}".format(e))
-    
-    #if orders received
-    if(command is not None):
-      try:
-        command = commands[command]
-      except:
-        print("couldn't recognize command",command)
-        break
-      print("command is " + str(command))
-      #robot.say_text("you want me to find tag %d" % (command)).wait_for_completed()
-      finished = False
-      while(True):
-        curim = robot.world.latest_image
-        if(curim is not None):
-          curim = np.array(curim.raw_image).astype(np.uint8)
-          gray = cv2.cvtColor(curim,cv2.COLOR_BGR2GRAY)
-          (corners,ids,rejected) = cv2.aruco.detectMarkers(gray,adict,parameters=params)
-          markers = dict()
-          if(len(corners)):
-            #print("Found a tag!")
-            for i in range(len(ids)):
-              try:
-                markers[ids[i][0]] += [corners[i]]
-              except:
-                markers[ids[i][0]] = [corners[i]]
-            #print(markers)
-          try:
-            im = cv2.aruco.drawDetectedMarkers(gray,markers[command])
-            curim[:,:,1] = im
-          except:
-            pass
-          cv2.imshow("frame",curim)
-          letter = cv2.waitKey(1) & 0xFF
-          if(letter in [ord("n"),ord("q")]):
-            finished = (letter==ord("q"))
-            break
-      if(finished):
-        break
 print("about to start...")
-cozmo.robot.Robot.drive_off_charger_on_connect = True #stay on charger
 cozmo.run_program(lookaround)
 cv2.destroyAllWindows()
