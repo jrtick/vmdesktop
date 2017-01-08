@@ -39,7 +39,7 @@ class PS4Controller(object):
     #arrows are mapped to the pygame joystick hat
     #bumpers also have an axis associated to them
     #no touchpad support that I know of (google?)
-    self.buttonMap = ["square","x","circle","triangle","left-trigger","right-trigger","left-bumper","right-bumper","share","options","left-press","right-press","power","touchpad","left","right","up","down"]
+    self.buttonMap = ["square","x","circle","triangle","left-trigger-button","right-trigger-button","left-bumper","right-bumper","share","options","left-press","right-press","power","touchpad","left","right","up","down"]
     self.buttonValues = dict()
     for button in self.buttonMap:
       self.buttonValues[button] = False #not pressed
