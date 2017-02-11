@@ -1,6 +1,27 @@
 from cozmo_fsm import *
 import numpy,cv2,time
 
+class StateMachineProgram(StateNode):
+  def __init__(self,showDisplay=True,arucolibname=cv2.aruco.DICT_4X4_250):
+    super().__init__()
+    
+    #setup cozmo image stream
+    self.robot.camera.image_stream_enabled = True
+    while(self.robot.world.latest_image is None):
+      time.sleep(0.2)
+
+    if(showDisplay):
+      #setup opencv display window
+      cv2.namedWindow(self.windowName)
+      cv2.startWindowThread()
+
+    #setup aruco dictionary
+    self.aruco_lib = cv2.aruco.Dictionary_get(aruco_lib)
+    self.aruco_params = cv2.aruco.DetectorParameters_create()
+    
+
+
+
 class ArucoSearch(StateNode):
   def init(self,aruco_lib = cv2.aruco.DICT_4X4_100):
     """user needs to specify which aruco dict they want cozmo to look for"""
