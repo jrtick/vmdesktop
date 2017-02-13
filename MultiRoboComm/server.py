@@ -21,20 +21,18 @@ class Server(object):
       print("connected to "+str(client))
 
     print("All connected! Ready to receive messages")
-    while len(self.clients) > 0:
-      markForDeletion = []
 
-      for i in range(len(self.clients)):
-        msg = self.clients[i][0].recv(1024).decode().strip()
-        #print("%s says %s" % (self.clients[i][1],msg))
-        if msg == "q":
-          self.clients[i][0].close()
-          markForDeletion.append(i)
-
-      for i in range(len(markForDeletion)):
-        del(self.clients[markForDeletion[i]-i])
-    self.close()
-
+  def await_message(self,clientNum,size=1024):
+    if(clientNum >= len(self.clients):
+      print("Error. Client %d does not exist" % (clientNum))
+      return
+    else:
+      msg = self.clients[clientNum][0].recv(size).decode().strip()
+      #print("%s says %s" % (self.clients[clientNum][1],msg))
+      if msg == "q":
+        self.clients[clientNum][0].close()
+        del(self.clients[clientNum])
+      return msg
 
   def listen_background(self,count=1):
     self.thread = Thread(target=self.listen_foreground, args=[count])
@@ -42,7 +40,7 @@ class Server(object):
     self.thread.start()
 
   def send(self,message):
-    self.client.send(message.encode())
+    pass #???????
 
   def close(self):
     for client in self.clients:

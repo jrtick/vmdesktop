@@ -33,6 +33,12 @@ class TagSet(object):
   def wipe(self):
     self.tags = []
 
+  def __str__(self):
+    retval = ""
+    for tag in self.tags:
+      retval += str(tag) + ","
+    return retval
+
 
 def tuple3Add(x,y): return (x[0]+y[0],x[1]+y[1],x[2]+y[2])
 def tuple3Sub(x,y): return (x[0]-y[0],x[1]-y[1],x[2]-y[2])
@@ -43,6 +49,8 @@ class ArucoWatcher(object):
     self.arucoDict = cv2.aruco.Dictionary_get(tagDictionary)
     self.tagSize = tagSize
     self.tagset = TagSet() #will keep track of current tags in memory
+  def __str__(self):
+    return str(self.tagset)
 
   def detect(self):
     im = self.camera.getGrayscaleImage()

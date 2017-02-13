@@ -24,7 +24,7 @@ class OpenGLViewer(object):
     self.fov = 50 # degrees
     self.near = 1
     self.far = 1000000
-    self.camera_location = [0,0,0]
+    self.camera_location = [0,1,0]
     self.look_dir = [0,0]
 
     #opengl params
@@ -158,7 +158,10 @@ class OpenGLViewer(object):
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    #blocksdraw3DRectangle(self,v1,v2,v3,v4,color=(1,1,1),fill=True):
+    #floor
+    self.draw3DRectangle(*[(-1000,0,-1000),(100,0,-1000),(1000,0,1000),(-1000,0,1000)],color=(0,0,0))
+    
+    #blocks
     self.draw3DRectangle(*[(-20,-20,100),(20,-20,100),(20,20,100),(-20,20,100)],color=(1,0,0))
     self.draw3DRectangle(*[(-20,-20,-100),(20,-20,-100),(20,20,-100),(-20,20,-100)],color=(1,0,1))
     self.drawRectangularPrism((-50,-50,-50),(50,50,50))

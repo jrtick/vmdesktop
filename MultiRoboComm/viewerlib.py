@@ -9,6 +9,7 @@ from OpenGL.GLU import *
 from threading import Thread #for backgrounding window
 import math #for rotating objects 
 
+
 class OpenGLViewer(object):
   def __init__(self,width=512,height=512,windowName = "a simple viewer",bgcolor = (0,0,0)):
     self.width = width
@@ -20,10 +21,10 @@ class OpenGLViewer(object):
     self.fov = 50 # degrees
     self.near = 1
     self.far = 1000000
-    self.camera_location = [0,0,0]
+    self.camera_location = [0,1,0]
     self.look_dir = [0,0]
-    self.objects = [] #things to draw
     self.is_visible = False
+    self.objects = []
 
     #opengl params
     glutInit()
@@ -31,7 +32,6 @@ class OpenGLViewer(object):
     glutInitWindowSize(self.width,self.height)
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE) #default to drawing outlines of shapes
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION) #killing window will not directly kill main program
-  
   def start(self): #displays in foreground
     #window creation
     self.window = glutCreateWindow(self.windowName)
@@ -57,7 +57,6 @@ class OpenGLViewer(object):
     self.thread = Thread(target=self.start)
     self.thread.daemon = True #ending fg program will kill bg program
     self.thread.start()
-    self.is_visible = True
 
   def drawRectangularPrism(self,mini,maxi,color=(1,1,1,1),fill=True):
     if(len(color)==3):
@@ -154,17 +153,22 @@ class OpenGLViewer(object):
     theta = self.look_dir[0]
     l = math.sin(theta)/math.cos(theta/2)
     phi = (math.pi-theta)/2
-    lookpt = [loc[0]-l*math.sin(phi),loc[1],*(0,0,1)]
-    gluLookAt(*loc, *lookpt, *[0,0,1]) #+y is always up
+    lookpt = [loc[0]-l*math.sin(phi),loc[1],loc[2]-l*math.cos(phi)+1]
+    gluLookAt(*loc, *lookpt, *[0, 1, 0]) #+y is always up
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     #floor
-    self.draw3DRectangle(*[(-1000,0,1000),(1000,0,1000),(1000,0,1000),(-1000,0,1000)],color=(0,0,0))
-
-    #objects
+    self.draw3DRectangle(*[(-1000,0,-1000),(100,0,-1000),(1000,0,1000),(-1000,0,1000)],color=(0,0,0))
+    
+    #blocks
     for obj in self.objects:
-      self.drawRectangularPrism(obj[0:3],obj[3:6])
+      color = (0.5,0.5,1)
+      if(len(obj)==3):
+        (mini,maxi,color) = obj[:3]
+      else:
+        (mini,maxi) = obj[:2]
+      self.drawRectangularPrism(mini,maxi,color=color)
 
     glutSwapBuffers()
 
@@ -177,38 +181,54 @@ class OpenGLViewer(object):
     glutPostRedisplay()
 
   def keyPressed(self,key,mouseX,mouseY,special=False):
-    if(special):
-      loc = self.camera_location
-      theta = self.look_dir[0]
-      l = math.sin(theta)/math.cos(theta/2)
-      phi = (math.pi-theta)/2
-      xdif = -l*math.sin(phi)
-      zdif = 1-l*math.cos(phi)
-      length = (xdif**2+zdif**2)**0.5
-      xdif /= length
-      zdif /= length
-      if(key==GLUT_KEY_UP):
-        self.camera_location[0] += xdif
-        self.camera_location[2] += zdif
-      elif(key==GLUT_KEY_DOWN):
-        self.camera_location[0] -= xdif
-        self.camera_location[2] -= zdif
-      elif(key==GLUT_KEY_LEFT):
-        self.look_dir[0] -= math.pi/180
-      elif(key==GLUT_KEY_RIGHT):
-        self.look_dir[0] += math.pi/180
-      else:
-        print("Pressed "+str(key)+" at (%d,%d)" % (mouseX,mouseY))
-    elif(key == b'\x1b'): #kill window
+    loc = self.camera_location
+    theta = self.look_dir[0]
+    l = math.sin(theta)/math.cos(theta/2)
+    phi = (math.pi-theta)/2
+    xdif = -l*math.sin(phi)
+    zdif = 1-l*math.cos(phi)
+    length = (xdif**2+zdif**2)**0.5
+    xdif /= length
+    zdif /= length
+    if((special and key==GLUT_KEY_UP) or (not special and key==b'w')):
+      #move forward
+      self.camera_location[0] += xdif
+      self.camera_location[2] += zdif
+    elif((special and key==GLUT_KEY_DOWN) or (not special and key==b's')):
+      #move backward
+      self.camera_location[0] -= xdif
+      self.camera_location[2] -= zdif
+    elif(special and key==GLUT_KEY_LEFT):
+      #rotate left
+      self.look_dir[0] -= math.pi/180
+    elif(special and key==GLUT_KEY_RIGHT):
+      #rotate right
+      self.look_dir[0] += math.pi/180
+    elif(special):
+      print("Pressed "+str(key)+" at (%d,%d)" % (mouseX,mouseY))
+    elif(key == b'a'):
+      #move left
+      self.camera_location[0] += zdif
+      self.camera_location[2] -= xdif
+    elif(key == b'd'):
+      #move right
+      self.camera_location[0] -= zdif
+      self.camera_location[2] += xdif
+    elif(key == b'q'):
+      #move up
+      self.camera_location[1] += 0.5
+    elif(key == b'z'):
+      #move down
+      self.camera_location[1] -= 0.5
+    elif(key == b'\x1b'):
+      #kill window if user presses escape
       self.is_visible = False
       glutDestroyWindow(self.window)
       glutLeaveMainLoop()
-    elif(key == b'q'):
-      self.camera_location[1] += 0.5
-    elif(key == b'z'):
-      self.camera_location[1] -= 0.5
     elif(key == b'i'):
-      print(self.camera_location,"at",self.look_dir)
+      camloc = "(%.2f,%.2f,%.2f)" % (self.camera_location[0],self.camera_location[1],self.camera_location[2])
+      lookdir = "(%.2f,%.2f)" % (self.look_dir[0],self.look_dir[1])
+      print(camloc+" at "+lookdir) #print user pose
     else:
       print("Pressed "+str(key)+" at (%d,%d)" % (mouseX,mouseY))
 
@@ -219,7 +239,6 @@ if __name__ == '__main__':
   import random,time #just for demo purposes!
   viewer = OpenGLViewer(bgcolor=(0.4,0.4,0.4)) #create window
   viewer.startThread() #background window and begin displaying
-  viewer.objects = [(0,0,0,10,10,10),(15,15,15,30,30,30)]
   print("main program begins.")
   while viewer.thread.is_alive():
     time.sleep(1)
