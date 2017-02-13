@@ -1,0 +1,6 @@
+Everyone will connect to the mother node. Mother node will display global world map.
+
+All children will communicate what objects they know the position of. This will enable a 'go fish' protocol: Mother node will sync robots that have the same landmark.
+*while synced, robots will be aware of each other's existence
+*Robots unsync when they are picked up. 
+*ALL LANDMARKS ARE ASSUMED TO BE STATIC (barring the cozmos)
