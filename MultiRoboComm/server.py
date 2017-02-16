@@ -2,11 +2,23 @@ import socket
 from threading import Thread
 
 class Server(object):
-  def __init__(self,server,ipaddr,port):
-    self.server = server
+  def __init__(self,ipaddr=None,port=42):
     self.ipaddr = ipaddr
     self.port = port
     self.clients = []
+
+    if(ipaddr is None):
+      #get my ip address
+      s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+      s.connect(('google.com',0))
+      ipaddr = s.getsockname()[0]
+      s.close()
+
+    #now, setup a server
+    print("Starting server at %s on port %d..." % (ipaddr,port))
+    self.server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    self.server.bind((ipaddr,port))
+
 
   def listen_foreground(self,count = 1):
     if(count==1):
@@ -22,13 +34,18 @@ class Server(object):
 
     print("All connected! Ready to receive messages")
 
-  def await_message(self,clientNum,size=1024):
-    if(clientNum >= len(self.clients):
+  def await_message(self,clientNum,size=None):
+    if(clientNum >= len(self.clients)):
       print("Error. Client %d does not exist" % (clientNum))
       return
     else:
+      if(size is None):
+        size = self.clients[clientNum][0].recv(10).decode().strip()
+        i=0
+        while size[i]=="0": i+=1
+        size = eval(size[i:])
       msg = self.clients[clientNum][0].recv(size).decode().strip()
-      #print("%s says %s" % (self.clients[clientNum][1],msg))
+      print("%s says %s" % (self.clients[clientNum][1],msg))
       if msg == "q":
         self.clients[clientNum][0].close()
         del(self.clients[clientNum])
@@ -40,29 +57,13 @@ class Server(object):
     self.thread.start()
 
   def send(self,message):
-    pass #???????
+    self.server.send(message.encode())
 
   def close(self):
     for client in self.clients:
       client.close()
     self.server.close()
     print("Server closed.")
-
-
-def setupConnection(host=None,port=42):
-  if(host is None):
-    #get my ip address
-    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    s.connect(('google.com',0))
-    host = s.getsockname()[0]
-    s.close()
-
-  #now, setup a server
-  print("Starting server at %s on port %d..." % (host,port))
-  server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-  server.bind((host,port))
-  return Server(server,host,port)
-
 
 
 
