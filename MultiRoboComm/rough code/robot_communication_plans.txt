@@ -1,0 +1,13 @@
+Everyone will connect to the mother node. Mother node will display global world map.
+
+All children will communicate what objects they know the position of. This will enable a 'go fish' protocol: Mother node will sync robots that have the same landmark.
+*ALL LANDMARKS ARE ASSUMED TO BE STATIC (barring the cozmos)
+
+THOUGHTS:
+*every client needs a unique ID
+*need to connect clients with same landmark
+*to sync on landmarks, either need landmark with position and pose or need two landmarks
+*nice visual would be if every client had a unique map, but then those maps merge as clients talk start referencing the same landmark
+*NEED to keep track of landmarks in constant coordinates (by offseting based on cozmo's position)
+*need to offset connections & memory of landmarks if cozmo is picked up (aka reset)
+*REACH GOAL: make it so robots can talk to one another. Would require each to have their own server setup and use of the mother node as a bus for communication?

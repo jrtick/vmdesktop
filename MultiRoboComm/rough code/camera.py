@@ -4,6 +4,7 @@ import cozmo,numpy,time,threading #needed for cozmo
 
 class Camera(object):
   def __init__(self):
+    self.id = None
     self.distortionArray = numpy.array([[0,0,0,0,0]]).astype(float)
     self.cameraMatrix = numpy.array([[1,0,0],[0,1,0],[0,0,1]]).astype(float)
 
@@ -35,6 +36,7 @@ class LaptopCam(Camera):
   def __init__(self):
     """Create a webcam object. Only one can exist at a time."""
     super().__init__()
+    self.id = 0 #can only have one anyways...
     self.cameraMatrix = numpy.array([[40,0,240],[0,40,320],[0,0,1]]).astype(float)
     self.mycam = cv2.VideoCapture(0)
     self.streamingName = None
@@ -68,6 +70,8 @@ class CozmoCam(Camera):
     self.thread.daemon = True #close if program closes
     self.run = True
     self.thread.start()
+    while self.cozmo_id is None: #will be set by thread
+      time.sleep(0.2)
 
   def getImage(self,size=None):
     try:
@@ -84,6 +88,8 @@ class CozmoCam(Camera):
     robot.camera.image_stream_enabled = True
     while robot.world.latest_image is None: time.sleep(0.2)
     
+    self.id = self.robot.robot_id
+
     while self.run: #keep cozmo alive by infinitely looping
       time.sleep(1)
 

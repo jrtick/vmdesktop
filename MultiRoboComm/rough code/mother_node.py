@@ -8,14 +8,14 @@ from threading import Thread
 
 NUM_CLIENTS=2
 MARKERS = None
-
+CONNECTIONS = [] #will be tuples of connected nodes with transforms
 
 #start connection
 server_connection = server.Server("localhost")
 server_connection.listen_foreground(NUM_CLIENTS) #allow two robots to connect
 MARKERS = [[] for i in range(NUM_CLIENTS)]
 
-
+#update markers in background
 def updateMarkers():
   while True:
     #update every client
@@ -34,7 +34,8 @@ while len(server_connection.clients) > 0:
   #message should evaluate to an array of tag IDs
   for i in range(len(MARKERS)):
     for j in range(i+1,len(MARKERS)):
-      print(MARKERS[i],MARKERS[j])
+      if(match(MARKERS[i],MARKERS[j])):
+        connections += [(i,j)]
       #should 1) find rot & trans to align robot j to robot i
       #2) send robot j this alignment and have them synchronize
       #3) remember that robots i and j are connected
@@ -45,3 +46,15 @@ while len(server_connection.clients) > 0:
 
 #disconnect when finished
 server_connection.close()
+
+
+def match(landmarks1,landmarks2):
+  global CONNECTIONS
+
+  matched = False
+  for i in range(len(landmarks1)):
+    if(landmarks1[i] in landmarks2):
+      #match!!
+      matched = True
+      break
+  return matched
