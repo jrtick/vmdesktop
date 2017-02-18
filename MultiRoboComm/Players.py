@@ -2,6 +2,7 @@ import cozmo
 import cv2,numpy,time,threading
 
 import Landmarks #need to know what to look for
+import LocalMap #need to keep track of objects
 
 ###########helper classes for camera calibration & obj detection ###########
 class Sight(object):
@@ -62,6 +63,8 @@ class Player(object):
   def __init__(self,vision,name="Unknown",detectors=[]):
     self.name = name
     self.streamingName = None #not currently streaming vision
+    self.uniqueObjects = dict()
+    self.worldMap = LocalMap.Map()
 
     if isinstance(vision,Sight):
       self.vision = vision
@@ -98,6 +101,9 @@ class Player(object):
 
     #CURRENTLY JUST PRINTS THE VISIBLE OBJECTS.
     #IN THE FUTURE, WILL UPDATE LOCAL MAP TO KEEP TRACK
+    for obj in visible_objects:
+      self.uniqueObjects[obj.unique_id] = obj
+
     print(str(visible_objects))
 
 
