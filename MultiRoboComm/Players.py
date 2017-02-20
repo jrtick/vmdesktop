@@ -52,7 +52,7 @@ class Aruco4x4Detector(Detector):
         tvec = (tvec[0]+origin[0],tvec[1]+origin[1],tvec[2]+origin[2])
         rvec = rots[i][0]
         rvec = (rvec[0]+curRot[0],rvec[1]+curRot[1],rvec[2]+curRot[2])
-        curtag = ArucoTag4X4(ids[i][0],tvec,rvec)
+        curtag = Landmarks.ArucoTag4X4(ids[i][0],tvec,rvec)
         seenTags.append(curtag)
 
     return (sawSomething,seenTags)
@@ -92,9 +92,9 @@ class Player(object):
     cv2.destroyWindow(self.streamingName)
     self.streamingName = None
 
-  def UpdateLook(self,position=(0,0,0),rotation=(0,0,0)):
+  def updateLook(self,position=(0,0,0),rotation=(0,0,0)):
     visible_objects = []
-    for detector in self.detector:
+    for detector in self.detectors:
       (seesSomething,objects) = detector.detect(position,rotation)
       if(seesSomething):
         visible_objects += objects
@@ -103,9 +103,6 @@ class Player(object):
     #IN THE FUTURE, WILL UPDATE LOCAL MAP TO KEEP TRACK
     for obj in visible_objects:
       self.uniqueObjects[obj.unique_id] = obj
-
-    print(str(visible_objects))
-
 
 class Webcam(Player):
   def __init__(self):
@@ -131,9 +128,8 @@ class Webcam(Player):
     else:
       raise Exception("Webcam image could not be read")
 
-  def __del__(self):
+  def __del__(self): #THIS DOESN"T GET CALLED AUTOMATICALLY
     self.camera.release()
-    super().__del__()
 
 
 class CozmoRobot(Player):
@@ -181,4 +177,3 @@ class CozmoRobot(Player):
   def __del__(self):
     self.run = False
     time.sleep(0.5)
-    super().__del__()
