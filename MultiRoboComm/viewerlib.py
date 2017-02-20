@@ -7,7 +7,8 @@ from OpenGL.GLU import *
 
 
 from threading import Thread #for backgrounding window
-import math #for rotating objects 
+import math #for rotating objects
+import copy #for getting local copy of object display
 
 
 class OpenGLViewer(object):
@@ -24,7 +25,7 @@ class OpenGLViewer(object):
     self.camera_location = [0,1,0]
     self.look_dir = [0,0]
     self.is_visible = False
-    self.objects = []
+    self.objects = dict() #will have identifiers for update purposes
 
     #opengl params
     glutInit()
@@ -41,7 +42,7 @@ class OpenGLViewer(object):
     #enable transparency
     glEnable(GL_BLEND)
     glEnable(GL_DEPTH_TEST)
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 
     #function bindings
@@ -162,7 +163,9 @@ class OpenGLViewer(object):
     self.draw3DRectangle(*[(-1000,0,-1000),(100,0,-1000),(1000,0,1000),(-1000,0,1000)],color=(0,0,0))
     
     #blocks
-    for obj in self.objects:
+    curObjects = copy.deepcopy(self.objects)
+    for name in curObjects:
+      obj = curObjects[name]
       color = (0.5,0.5,1)
       if(len(obj)==3):
         (mini,maxi,color) = obj[:3]

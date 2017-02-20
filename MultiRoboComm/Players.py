@@ -63,7 +63,6 @@ class Player(object):
   def __init__(self,vision,name="Unknown",detectors=[]):
     self.name = name
     self.streamingName = None #not currently streaming vision
-    self.uniqueObjects = dict()
     self.worldMap = LocalMap.Map()
 
     if isinstance(vision,Sight):
@@ -102,7 +101,9 @@ class Player(object):
     #CURRENTLY JUST PRINTS THE VISIBLE OBJECTS.
     #IN THE FUTURE, WILL UPDATE LOCAL MAP TO KEEP TRACK
     for obj in visible_objects:
-      self.uniqueObjects[obj.unique_id] = obj
+      p = obj.pos
+      self.worldMap.addObject(obj.unique_id,(p[0]-2,p[1]-2,p[2]-2),\
+                                            (p[0]+2,p[1]+2,p[2]+2),(1,0,0))
 
 class Webcam(Player):
   def __init__(self):
