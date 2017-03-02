@@ -136,7 +136,7 @@ class Webcam(Player):
 class CozmoRobot(Player):
   def __init__(self):
     #first, connect to cozmo
-    self.cozmo_num = None #this will be reset by setupCozmo
+    self.cozmo_id = None #this will be reset by setupCozmo
     self.thread = threading.Thread( \
                      target = lambda: cozmo.run_program(self.setupCozmo))
     self.thread.daemon = True #close if program closes
@@ -164,7 +164,7 @@ class CozmoRobot(Player):
     while self.run: time.sleep(0.5)
 
 
-  def getImage(self,size=None):
+  def getImage(self,gray=False,size=None):
     try:
       image = self.robot.world.latest_image.raw_image
       image = numpy.array(image).astype(numpy.uint8)
